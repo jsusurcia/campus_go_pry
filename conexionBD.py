@@ -1,5 +1,5 @@
-import MySQLdb as dbc
-import MySQLdb.cursors
+import pymysql as dbc
+import pymysql.cursors
 from config import Config
 
 class Conexion:
