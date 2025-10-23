@@ -2,11 +2,13 @@ from flask import Flask
 from routes.routes_usuario import ws_usuario
 from routes.routes_vehiculo import ws_vehiculo
 from routes.routes_reserva import ws_reserva
+from routes.routes_viaje import ws_viaje
 
 app = Flask(__name__)
 app.register_blueprint(ws_usuario)
 app.register_blueprint(ws_vehiculo)
 app.register_blueprint(ws_reserva)
+app.register_blueprint(ws_viaje)
 
 
 @app.route('/')
