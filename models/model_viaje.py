@@ -6,34 +6,28 @@ class Viaje:
     
     def listar_todos(self, filtros):
         try:
-            con = Conexion().open   #Abrir conexión
-            cursor = con.cursor()   #Crear cursor
-            
-            #Consulta base
+            con = Conexion().open
+            cursor = con.cursor()
+
             sql_base = """
             SELECT vi.asientos_disponibles, vi.asientos_ofertados, vi.destino, es.nombre AS estado, 
                 vi.fecha_hora_salida, vi.lat_destino, vi.lat_partida, vi.lng_destino, vi.lng_partida, 
-                vi.punto_partida, vi.restricciones, ve.color, ve.id AS vehiculo_id, ve.marca, 
-                ve.modelo, ve.placa, vi.id AS viaje_id
-            FROM 
-                viaje vi
-            INNER JOIN 
-                estado es ON vi.estado_id = es.id
-            INNER JOIN 
-                vehiculo ve ON vi.vehiculo_id = ve.id
+                vi.punto_partida, vi.restricciones, ve.color AS vehiculo_color, ve.id AS vehiculo_id, 
+                ve.marca AS vehiculo_marca, ve.modelo AS vehiculo_modelo, ve.placa AS vehiculo_placa, 
+                vi.id AS viaje_id
+            FROM viaje vi
+            INNER JOIN estado es ON vi.estado_id = es.id
+            INNER JOIN vehiculo ve ON vi.vehiculo_id = ve.id
             """
-            
-            #Construcción dinámica de cláusulas WHERE
-            where_clause = []   #Condicionales
-            parametros = []     #Valores
-            
-            #Agregar validación de fecha
+
+            where_clause = []
+            parametros = []
+
             if filtros.get('desde') and filtros.get('hasta'):
                 where_clause.append("vi.fecha_hora_salida BETWEEN %s AND %s")
                 parametros.append(filtros['desde'])
                 parametros.append(filtros['hasta'])
-                
-            #Agregar validación de búsqueda (texto, campo)
+
             texto_busqueda = filtros.get('texto_busqueda')
             campo_busqueda = filtros.get('campo_busqueda')
             if texto_busqueda and campo_busqueda:
@@ -43,25 +37,48 @@ class Viaje:
                 elif campo_busqueda == 'punto_partida':
                     where_clause.append("vi.punto_partida LIKE %s")
                     parametros.append(f"%{texto_busqueda}%")
-            
-            #Agregar validación de asientos
+
             if filtros.get('asientos_disponibles') == True:
                 where_clause.append("vi.asientos_disponibles > 0")
-                
-            #Agregar validación de restricciones
+
             if filtros.get('sin_restricciones') == True:
                 where_clause.append("vi.restricciones = 'Ninguna'")
-                
-            #Ensamblar la consulta final
+
             sql_final = sql_base
             if where_clause:
                 sql_final += " WHERE " + " AND ".join(where_clause)
             sql_final += ";"
-            
-            print(f"SQL: {cursor.mogrify(sql_final, parametros)}")
+
             cursor.execute(sql_final, parametros)
-            resultado = cursor.fetchall()
-            return resultado
+            rows = cursor.fetchall()
+
+            viajes = []
+            for r in rows:
+                viaje = {
+                    "viaje_id": r["viaje_id"],
+                    "asientos_disponibles": r["asientos_disponibles"],
+                    "asientos_ofertados": r["asientos_ofertados"],
+                    "destino": r["destino"],
+                    "estado": r["estado"],
+                    "fecha_hora_salida": str(r["fecha_hora_salida"]),
+                    "lat_destino": r["lat_destino"],
+                    "lat_partida": r["lat_partida"],
+                    "lng_destino": r["lng_destino"],
+                    "lng_partida": r["lng_partida"],
+                    "punto_partida": r["punto_partida"],
+                    "restricciones": r["restricciones"],
+                    "vehiculo": {
+                        "id": r["vehiculo_id"],
+                        "color": r["vehiculo_color"],
+                        "marca": r["vehiculo_marca"],
+                        "modelo": r["vehiculo_modelo"],
+                        "placa": r["vehiculo_placa"]
+                    }
+                }
+                viajes.append(viaje)
+
+            return viajes
+
         except Exception as e:
             print(f"Error, ocurrió algo: {e}")
             return None
