@@ -85,3 +85,27 @@ class Viaje:
         finally:
             cursor.close()
             con.close()
+
+    def obtener_usuarios_id(self, viaje_id):
+        try:
+            con = Conexion().open
+            cursor = con.cursor()
+
+            sql = """
+            SELECT DISTINCT re.pasajero_id 
+                FROM reserva re
+                INNER JOIN reserva_viaje rv ON rv.reserva_id = re.id
+                WHERE rv.viaje_id = %s;
+            """
+
+            cursor.execute(sql, [viaje_id])
+            rows = cursor.fetchall()
+            usuarios = [r['pasajero_id'] for r in rows]
+            return usuarios
+
+        except Exception as e:
+            print(f"Error al obtener usuarios por viaje: {e}")
+            return None
+        finally:
+            cursor.close()
+            con.close()

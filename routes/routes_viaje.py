@@ -24,3 +24,16 @@ def listar_todos():
             return jsonify({'status': False, 'data': None, 'message': str(e)}), 500
     except Exception as e:
         print(e)
+        
+
+#Endpoint para obtener los IDs de pasajeros a partir de un viaje ID
+@ws_viaje.route('/viaje/pasajeros/<id>', methods=['GET'])
+def obtener_pasajeros_id(id):
+    try:
+        resultado = viaje.obtener_usuarios_id(id)
+        if resultado:
+            return jsonify({'status': True, 'data': resultado, 'message':'Pasajeros encontrados correctamente'}), 200
+        else:
+            return jsonify({'status': False, 'data': None, 'message': 'No se encontraron pasajeros'}), 401
+    except Exception as e:
+        return jsonify({'status': False, 'data': None, 'message': str(e)}), 500
